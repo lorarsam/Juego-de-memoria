@@ -1,0 +1,211 @@
+:root {
+  --bg: #12321f;
+  --panel: #321814;
+  --panel-dark: #160b0a;
+  --wood-light: #68433d;
+  --card: #0e3022;
+  --card-lit: #b9d2bf;
+  --accent: #ffba55;
+  --cream: #f8df9a;
+  --ink: #10221b;
+  --shadow: #050505;
+  --font: "Courier New", Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--cream);
+  font-family: var(--font);
+  image-rendering: pixelated;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.hud {
+  display: flex;
+  justify-content: center;
+  gap: 34px;
+  min-height: 36px;
+  padding: 10px 12px 8px;
+  background: var(--panel);
+  border-bottom: 3px solid var(--panel-dark);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .45);
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hud p {
+  margin: 0;
+}
+
+.hud span {
+  color: var(--accent);
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 20px 16px 28px;
+}
+
+.name-box {
+  width: min(100%, 306px);
+  margin-bottom: 20px;
+  padding: 5px;
+  background: var(--panel);
+  border: 3px solid var(--panel-dark);
+  box-shadow: inset 0 0 0 2px var(--wood-light), 4px 4px 0 var(--shadow);
+}
+
+.name-box input {
+  width: 100%;
+  height: 18px;
+  color: var(--cream);
+  background: var(--wood-light);
+  border: 0;
+  outline: 0;
+  text-align: center;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.name-box input::placeholder {
+  color: rgba(248, 223, 154, .55);
+}
+
+.controls {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.btn {
+  min-width: 90px;
+  min-height: 38px;
+  padding: 8px 16px;
+  border: 3px solid var(--panel-dark);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .25), 4px 4px 0 var(--shadow);
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .25), 1px 1px 0 var(--shadow);
+}
+
+.btn-start {
+  background: #b9d2bf;
+}
+
+.btn-reset {
+  background: var(--accent);
+}
+
+.message {
+  min-height: 24px;
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 64px);
+  gap: 10px;
+  padding: 14px;
+  background: var(--panel);
+  border: 6px solid var(--panel);
+  box-shadow: 5px 5px 0 var(--shadow), inset 0 0 0 3px var(--wood-light);
+}
+
+.card {
+  width: 64px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  border: 4px solid var(--panel-dark);
+  background: var(--card);
+  color: var(--accent);
+  font-size: 25px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--shadow), inset 0 0 0 2px rgba(255, 186, 85, .12);
+}
+
+.card:hover {
+  filter: brightness(1.12);
+}
+
+.card.volteada {
+  background: var(--card-lit);
+  color: var(--ink);
+}
+
+.card.encontrada {
+  background: var(--accent);
+  color: var(--ink);
+  cursor: default;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 460px) {
+  .hud {
+    gap: 12px;
+    font-size: 10px;
+  }
+
+  .controls {
+    gap: 10px;
+  }
+
+  .btn {
+    min-width: 82px;
+    padding: 8px 12px;
+  }
+
+  .board {
+    grid-template-columns: repeat(4, 54px);
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .card {
+    width: 54px;
+    height: 70px;
+  }
+}

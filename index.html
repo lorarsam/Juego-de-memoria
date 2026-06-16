@@ -1,202 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Juego de Memoria</title>
-<style>
-  body{font-family:system-ui,sans-serif;max-width:540px;margin:40px auto;padding:0 16px;color:#222}
-  h1{font-size:1.4rem}
-  .fila{display:flex;gap:8px;margin-bottom:16px}
-  input{flex:1;padding:8px 10px;font-size:1rem;border:1px solid #bbb;border-radius:6px}
-  button{padding:8px 12px;font-size:1rem;cursor:pointer;border:1px solid #888;border-radius:6px;background:#f3f3f3}
-  #tablero{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
-  .carta{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.8rem;background:#2b3a42;color:#fff;border-radius:10px;cursor:pointer;user-select:none}
-  .carta.volteada{background:#e8eef0;color:#222}
-  .carta.encontrada{background:#cdebd7;color:#222;cursor:default}
-  #movimientos{color:#666;font-size:.9rem;margin-top:14px}
-  #mensaje{font-size:1.1rem;font-weight:600;margin-top:8px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego de Memoria</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
 </head>
 <body>
-<h1>Juego de Memoria</h1>
+  <header class="hud" aria-label="Estado del juego">
+    <p>Level <span id="nivel">1</span></p>
+    <p>Pairs: <span id="pares">0/8</span></p>
+    <p>Attempts: <span id="movimientos">0</span></p>
+  </header>
 
-<div class="fila">
-  <input id="nombre" placeholder="Tu nombre...">
-  <button id="iniciar">Iniciar / Reiniciar</button>
-</div>
+  <main class="game" aria-labelledby="titulo">
+    <h1 id="titulo" class="sr-only">Juego de Memoria</h1>
 
-<div id="tablero"></div>
-<p id="movimientos"></p>
-<p id="mensaje"></p>
+    <label class="name-box" for="nombre">
+      <span class="sr-only">Nombre del jugador</span>
+      <input id="nombre" type="text" autocomplete="off" placeholder="Tu nombre">
+    </label>
 
-<script>
-  const EMOJIS = ['🍎', '🚀', '🐱', '🌵', '🎲', '🎧', '⚽', '🍕'];
+    <section class="controls" aria-label="Controles del juego">
+      <button id="iniciar" type="button" class="btn btn-start">▶ Start</button>
+      <button id="reiniciar" type="button" class="btn btn-reset">↻ Reset</button>
+    </section>
 
-  const state = {
-    cartas: [],
-    volteadas: [],
-    movimientos: 0,
-    nombre: '',
-    bloqueado: false,
-    paresEncontrados: 0
-  };
+    <p id="mensaje" class="message" aria-live="polite"></p>
 
-  const tablero = document.getElementById('tablero');
-  const inputNombre = document.getElementById('nombre');
-  const botonIniciar = document.getElementById('iniciar');
-  const contadorMovimientos = document.getElementById('movimientos');
-  const mensaje = document.getElementById('mensaje');
-
-  botonIniciar.addEventListener('click', iniciarJuego);
-  tablero.addEventListener('click', manejarClickTablero);
-  document.addEventListener('keydown', manejarTeclado);
-  inputNombre.addEventListener('change', actualizarNombre);
-
-  iniciarJuego();
-
-  function iniciarJuego() {
-    state.cartas = crearMazo();
-    state.volteadas = [];
-    state.movimientos = 0;
-    state.nombre = inputNombre.value.trim() || 'jugador';
-    state.bloqueado = false;
-    state.paresEncontrados = 0;
-    mensaje.textContent = '';
-    render();
-  }
-
-  function crearMazo() {
-    const mazo = [];
-
-    EMOJIS.forEach(function (emoji) {
-      mazo.push({ emoji: emoji, encontrada: false });
-      mazo.push({ emoji: emoji, encontrada: false });
-    });
-
-    return barajar(mazo);
-  }
-
-  function barajar(mazo) {
-    const copia = mazo.slice();
-
-    for (let i = copia.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const temporal = copia[i];
-      copia[i] = copia[j];
-      copia[j] = temporal;
-    }
-
-    return copia;
-  }
-
-  function render() {
-    const fragmento = document.createDocumentFragment();
-
-    state.cartas.forEach(function (carta, indice) {
-      const div = document.createElement('button');
-      const estaVolteada = state.volteadas.includes(indice);
-      const visible = carta.encontrada || estaVolteada;
-
-      div.type = 'button';
-      div.className = 'carta';
-      div.dataset.indice = indice;
-      div.textContent = visible ? carta.emoji : '?';
-
-      if (visible) {
-        div.classList.add('volteada');
-      }
-
-      if (carta.encontrada) {
-        div.classList.add('encontrada');
-      }
-
-      fragmento.appendChild(div);
-    });
-
-    tablero.replaceChildren(fragmento);
-    contadorMovimientos.textContent = 'Movimientos: ' + state.movimientos;
-  }
-
-  function manejarClickTablero(event) {
-    const carta = event.target.closest('.carta');
-
-    if (!carta || !tablero.contains(carta)) {
-      return;
-    }
-
-    voltearCarta(Number(carta.dataset.indice));
-  }
-
-  function manejarTeclado(event) {
-    if (event.key.toLowerCase() === 'r') {
-      iniciarJuego();
-    }
-  }
-
-  function actualizarNombre() {
-    state.nombre = inputNombre.value.trim() || 'jugador';
-  }
-
-  function voltearCarta(indice) {
-    const carta = state.cartas[indice];
-
-    // BUG: el código auditado permitía una tercera carta durante el setTimeout.
-    // FIX: el bloqueo vive en el estado y corta nuevos clicks hasta resolver el turno.
-    if (state.bloqueado || !carta || carta.encontrada) {
-      return;
-    }
-
-    // BUG: un doble click sobre la misma carta podía formar pareja consigo misma.
-    // FIX: si el índice ya está volteado, el click se ignora.
-    if (state.volteadas.includes(indice)) {
-      return;
-    }
-
-    state.volteadas.push(indice);
-    render();
-
-    if (state.volteadas.length === 2) {
-      resolverTurno();
-    }
-  }
-
-  function resolverTurno() {
-    const a = state.volteadas[0];
-    const b = state.volteadas[1];
-    state.movimientos++;
-
-    // BUG: antes se comparaba leyendo textContent del DOM.
-    // FIX: la comparación usa state.cartas, la fuente única de verdad.
-    if (state.cartas[a].emoji === state.cartas[b].emoji) {
-      state.cartas[a].encontrada = true;
-      state.cartas[b].encontrada = true;
-      state.volteadas = [];
-      state.paresEncontrados++;
-      render();
-      revisarVictoria();
-      return;
-    }
-
-    state.bloqueado = true;
-    render();
-
-    setTimeout(function () {
-      state.volteadas = [];
-      state.bloqueado = false;
-      render();
-    }, 800);
-  }
-
-  function revisarVictoria() {
-    if (!state.cartas.every(function (carta) { return carta.encontrada; })) {
-      return;
-    }
-
-    // BUG: innerHTML con el nombre del jugador permite inyectar HTML o scripts.
-    // FIX: textContent muestra el nombre como texto seguro.
-    mensaje.textContent = 'Ganaste, ' + state.nombre + '!';
-  }
-</script>
+    <section id="tablero" class="board" aria-label="Tablero de cartas"></section>
+  </main>
 </body>
 </html>
