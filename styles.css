@@ -537,10 +537,11 @@ input {
 
   .play-area {
     order: 2;
-    width: min(100%, 390px);
+    width: min(100%, 360px);
   }
 
   .history-panel {
+    width: 100%;
     margin-top: 12px;
   }
 }
@@ -569,25 +570,27 @@ input {
   }
 
   .board {
+    width: 100%;
     gap: 8px;
     padding: 10px;
   }
 
   .board[data-nivel="1"] {
-    grid-template-columns: repeat(4, 54px);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .board[data-nivel="2"] {
-    grid-template-columns: repeat(4, 54px);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .board[data-nivel="3"] {
-    grid-template-columns: repeat(4, 54px);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .card {
-    width: 54px;
-    height: 70px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 54 / 70;
   }
 
   .card-icon {
