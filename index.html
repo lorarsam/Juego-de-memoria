@@ -33,80 +33,169 @@
 <script>
   const EMOJIS = ['🍎', '🚀', '🐱', '🌵', '🎲', '🎧', '⚽', '🍕'];
 
-  let cartas = [];
-  let volteadas = [];
-  let movimientos = 0;
-  let nombre = '';
+  const state = {
+    cartas: [],
+    volteadas: [],
+    movimientos: 0,
+    nombre: '',
+    bloqueado: false,
+    paresEncontrados: 0
+  };
 
   const tablero = document.getElementById('tablero');
+  const inputNombre = document.getElementById('nombre');
+  const botonIniciar = document.getElementById('iniciar');
+  const contadorMovimientos = document.getElementById('movimientos');
+  const mensaje = document.getElementById('mensaje');
 
-  document.getElementById('iniciar').addEventListener('click', function () {
-    nombre = document.getElementById('nombre').value;
-    cartas = [];
-    EMOJIS.forEach(function (e) {
-      cartas.push({ emoji: e, encontrada: false });
-      cartas.push({ emoji: e, encontrada: false });
-    });
-    cartas.sort(function () { return Math.random() - 0.5; });
-    volteadas = [];
-    movimientos = 0;
-    document.getElementById('mensaje').textContent = '';
+  botonIniciar.addEventListener('click', iniciarJuego);
+  tablero.addEventListener('click', manejarClickTablero);
+  document.addEventListener('keydown', manejarTeclado);
+  inputNombre.addEventListener('change', actualizarNombre);
+
+  iniciarJuego();
+
+  function iniciarJuego() {
+    state.cartas = crearMazo();
+    state.volteadas = [];
+    state.movimientos = 0;
+    state.nombre = inputNombre.value.trim() || 'jugador';
+    state.bloqueado = false;
+    state.paresEncontrados = 0;
+    mensaje.textContent = '';
     render();
-  });
-
-  function render() {
-    tablero.innerHTML = '';
-    for (let i = 0; i < cartas.length; i++) {
-      const div = document.createElement('div');
-      div.className = 'carta';
-      div.dataset.indice = i;
-      div.textContent = cartas[i].encontrada ? cartas[i].emoji : '?';
-      div.addEventListener('click', function () {
-        voltearCarta(div);
-      });
-      tablero.appendChild(div);
-    }
-    document.getElementById('movimientos').textContent = 'Movimientos: ' + movimientos;
   }
 
-  function voltearCarta(div) {
-    const i = Number(div.dataset.indice);
-    div.textContent = cartas[i].emoji;
-    div.classList.add('volteada');
-    volteadas.push(i);
+  function crearMazo() {
+    const mazo = [];
 
-    if (volteadas.length === 2) {
-      movimientos++;
-      document.getElementById('movimientos').textContent = 'Movimientos: ' + movimientos;
+    EMOJIS.forEach(function (emoji) {
+      mazo.push({ emoji: emoji, encontrada: false });
+      mazo.push({ emoji: emoji, encontrada: false });
+    });
 
-      const a = volteadas[0];
-      const b = volteadas[1];
-      const divs = tablero.children;
+    return barajar(mazo);
+  }
 
-      if (divs[a].textContent === divs[b].textContent) {
-        cartas[a].encontrada = true;
-        cartas[b].encontrada = true;
-        divs[a].classList.add('encontrada');
-        divs[b].classList.add('encontrada');
-        volteadas = [];
-        revisarVictoria();
-      } else {
-        setTimeout(function () {
-          divs[a].textContent = '?';
-          divs[b].textContent = '?';
-          divs[a].classList.remove('volteada');
-          divs[b].classList.remove('volteada');
-          volteadas = [];
-        }, 800);
-      }
+  function barajar(mazo) {
+    const copia = mazo.slice();
+
+    for (let i = copia.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temporal = copia[i];
+      copia[i] = copia[j];
+      copia[j] = temporal;
     }
+
+    return copia;
+  }
+
+  function render() {
+    const fragmento = document.createDocumentFragment();
+
+    state.cartas.forEach(function (carta, indice) {
+      const div = document.createElement('button');
+      const estaVolteada = state.volteadas.includes(indice);
+      const visible = carta.encontrada || estaVolteada;
+
+      div.type = 'button';
+      div.className = 'carta';
+      div.dataset.indice = indice;
+      div.textContent = visible ? carta.emoji : '?';
+
+      if (visible) {
+        div.classList.add('volteada');
+      }
+
+      if (carta.encontrada) {
+        div.classList.add('encontrada');
+      }
+
+      fragmento.appendChild(div);
+    });
+
+    tablero.replaceChildren(fragmento);
+    contadorMovimientos.textContent = 'Movimientos: ' + state.movimientos;
+  }
+
+  function manejarClickTablero(event) {
+    const carta = event.target.closest('.carta');
+
+    if (!carta || !tablero.contains(carta)) {
+      return;
+    }
+
+    voltearCarta(Number(carta.dataset.indice));
+  }
+
+  function manejarTeclado(event) {
+    if (event.key.toLowerCase() === 'r') {
+      iniciarJuego();
+    }
+  }
+
+  function actualizarNombre() {
+    state.nombre = inputNombre.value.trim() || 'jugador';
+  }
+
+  function voltearCarta(indice) {
+    const carta = state.cartas[indice];
+
+    // BUG: el código auditado permitía una tercera carta durante el setTimeout.
+    // FIX: el bloqueo vive en el estado y corta nuevos clicks hasta resolver el turno.
+    if (state.bloqueado || !carta || carta.encontrada) {
+      return;
+    }
+
+    // BUG: un doble click sobre la misma carta podía formar pareja consigo misma.
+    // FIX: si el índice ya está volteado, el click se ignora.
+    if (state.volteadas.includes(indice)) {
+      return;
+    }
+
+    state.volteadas.push(indice);
+    render();
+
+    if (state.volteadas.length === 2) {
+      resolverTurno();
+    }
+  }
+
+  function resolverTurno() {
+    const a = state.volteadas[0];
+    const b = state.volteadas[1];
+    state.movimientos++;
+
+    // BUG: antes se comparaba leyendo textContent del DOM.
+    // FIX: la comparación usa state.cartas, la fuente única de verdad.
+    if (state.cartas[a].emoji === state.cartas[b].emoji) {
+      state.cartas[a].encontrada = true;
+      state.cartas[b].encontrada = true;
+      state.volteadas = [];
+      state.paresEncontrados++;
+      render();
+      revisarVictoria();
+      return;
+    }
+
+    state.bloqueado = true;
+    render();
+
+    setTimeout(function () {
+      state.volteadas = [];
+      state.bloqueado = false;
+      render();
+    }, 800);
   }
 
   function revisarVictoria() {
-    const todasEncontradas = cartas.every(function (c) { return c.encontrada; });
-    if (todasEncontradas) {
-      document.getElementById('mensaje').innerHTML = '¡Ganaste, ' + nombre + '! 🎉';
+    if (!state.cartas.every(function (carta) { return carta.encontrada; })) {
+      return;
     }
+
+    // BUG: innerHTML con el nombre del jugador permite inyectar HTML o scripts.
+    // FIX: textContent muestra el nombre como texto seguro.
+    mensaje.textContent = 'Ganaste, ' + state.nombre + '!';
   }
 </script>
 </body>
