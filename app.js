@@ -6,6 +6,10 @@ const NIVELES = [
 const STORAGE_KEY = 'juego-memoria-partida';
 const HISTORY_KEY = 'juego-memoria-historial';
 const AUDIO_SRC = 'cancion_juego.mp3';
+const ACTION_LABELS = {
+  start: '▶ Start',
+  reset: '↻ Reset'
+};
 const ICONOS = crearIconos(Math.max.apply(null, NIVELES.map(function (nivel) {
   return nivel.pares;
 })));
@@ -29,16 +33,14 @@ const tablero = document.getElementById('tablero');
 const niveles = document.getElementById('niveles');
 const inputNombre = document.getElementById('nombre');
 const botonIniciar = document.getElementById('iniciar');
-const botonReiniciar = document.getElementById('reiniciar');
 const contadorNivel = document.getElementById('nivel');
 const contadorMovimientos = document.getElementById('movimientos');
 const contadorPares = document.getElementById('pares');
 const mensaje = document.getElementById('mensaje');
 const historial = document.getElementById('historial');
 
-botonIniciar.addEventListener('click', iniciarJuego);
-botonReiniciar.addEventListener('click', iniciarJuego);
-inputNombre.addEventListener('change', actualizarNombre);
+botonIniciar.addEventListener('click', manejarAccionPrincipal);
+inputNombre.addEventListener('input', manejarCambioNombre);
 // FIX: delegación de eventos; no se crea un listener por cada carta en cada render.
 tablero.addEventListener('click', manejarClickTablero);
 niveles.addEventListener('click', manejarCambioNivel);
@@ -50,9 +52,20 @@ renderHistorial();
 if (!cargarPartida()) {
   render();
   mensaje.textContent = 'Escribe tu nombre y presiona Start';
+} else if (!state.iniciado) {
+  mensaje.textContent = 'Escribe tu nombre y presiona Start';
 }
 
-function iniciarJuego() {
+function manejarAccionPrincipal() {
+  if (state.iniciado) {
+    reiniciarPartida();
+    return;
+  }
+
+  iniciarJuego(true);
+}
+
+function iniciarJuego(reiniciarMusica) {
   const nombre = inputNombre.value.trim();
 
   if (!nombre) {
@@ -72,7 +85,11 @@ function iniciarJuego() {
   mensaje.textContent = '';
   render();
   guardarPartida();
-  iniciarMusica();
+  iniciarMusica(reiniciarMusica);
+}
+
+function reiniciarPartida() {
+  iniciarJuego(false);
 }
 
 function crearMazo() {
@@ -149,6 +166,7 @@ function render() {
   contadorNivel.textContent = String(state.nivel.id);
   contadorMovimientos.textContent = String(state.movimientos);
   contadorPares.textContent = state.paresEncontrados + '/' + state.nivel.pares;
+  actualizarBotonPrincipal();
   actualizarBotonesNivel();
 }
 
@@ -197,12 +215,14 @@ function manejarClickTablero(event) {
 
 function manejarTeclado(event) {
   if (event.key === 'Enter') {
-    iniciarJuego();
+    if (!state.iniciado) {
+      iniciarJuego(true);
+    }
     return;
   }
 
-  if (event.key.toLowerCase() === 'r') {
-    iniciarJuego();
+  if (event.key.toLowerCase() === 'r' && state.iniciado) {
+    reiniciarPartida();
   }
 }
 
@@ -222,7 +242,19 @@ function manejarCambioNivel(event) {
   }
 
   state.nivel = nivelElegido;
-  iniciarJuego();
+
+  if (state.iniciado) {
+    iniciarJuego(false);
+  } else {
+    render();
+    guardarPartida();
+  }
+}
+
+function actualizarBotonPrincipal() {
+  botonIniciar.textContent = state.iniciado ? ACTION_LABELS.reset : ACTION_LABELS.start;
+  botonIniciar.classList.toggle('btn-reset', state.iniciado);
+  botonIniciar.classList.toggle('btn-start', !state.iniciado);
 }
 
 function actualizarBotonesNivel() {
@@ -233,9 +265,24 @@ function actualizarBotonesNivel() {
   });
 }
 
-function actualizarNombre() {
-  state.nombre = inputNombre.value.trim();
-  guardarPartida();
+function manejarCambioNombre() {
+  const nombre = inputNombre.value.trim();
+
+  if (!state.iniciado && nombre === state.nombre) {
+    return;
+  }
+
+  state.nombre = nombre;
+  state.iniciado = false;
+  state.cartas = [];
+  state.volteadas = [];
+  state.movimientos = 0;
+  state.paresEncontrados = 0;
+  state.bloqueado = false;
+  detenerMusica();
+  localStorage.removeItem(STORAGE_KEY);
+  mensaje.textContent = nombre ? 'Presiona Start para iniciar' : 'Escribe tu nombre para iniciar';
+  render();
 }
 
 function voltearCarta(indice) {
@@ -417,7 +464,7 @@ function cargarPartida() {
     state.nombre = typeof partida.nombre === 'string' ? partida.nombre : '';
     state.bloqueado = false;
     state.paresEncontrados = contarParesEncontrados(state.cartas);
-    state.iniciado = partida.iniciado !== false;
+    state.iniciado = Boolean(partida.iniciado && state.nombre);
     state.nivel = nivel;
 
     inputNombre.value = state.nombre;
@@ -436,11 +483,19 @@ function contarParesEncontrados(cartas) {
   }).length / 2;
 }
 
-function iniciarMusica() {
-  musica.currentTime = 0;
+function iniciarMusica(reiniciar) {
+  if (reiniciar) {
+    musica.currentTime = 0;
+  }
+
   musica.play().catch(function () {
     mensaje.textContent = 'Juego iniciado. Activa el audio si el navegador lo bloqueo.';
   });
+}
+
+function detenerMusica() {
+  musica.pause();
+  musica.currentTime = 0;
 }
 
 function esCartaValida(carta) {
