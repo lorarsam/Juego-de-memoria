@@ -32,7 +32,14 @@
 
     <p id="mensaje" class="message" aria-live="polite"></p>
 
-    <section id="tablero" class="board" aria-label="Tablero de cartas"></section>
+    <section class="play-area">
+      <section id="tablero" class="board" aria-label="Tablero de cartas"></section>
+
+      <aside class="history-panel" aria-labelledby="historial-titulo">
+        <h2 id="historial-titulo">Historial</h2>
+        <ol id="historial" class="history-list"></ol>
+      </aside>
+    </section>
 
     <nav id="niveles" class="level-nav" aria-label="Selector de dificultad"></nav>
   </main>

@@ -4,6 +4,7 @@ const NIVELES = [
   { id: 3, nombre: 'Dificil', icono: '★', pares: 16 }
 ];
 const STORAGE_KEY = 'juego-memoria-partida';
+const HISTORY_KEY = 'juego-memoria-historial';
 const ICONOS = crearIconos(Math.max.apply(null, NIVELES.map(function (nivel) {
   return nivel.pares;
 })));
@@ -27,6 +28,7 @@ const contadorNivel = document.getElementById('nivel');
 const contadorMovimientos = document.getElementById('movimientos');
 const contadorPares = document.getElementById('pares');
 const mensaje = document.getElementById('mensaje');
+const historial = document.getElementById('historial');
 
 botonIniciar.addEventListener('click', iniciarJuego);
 botonReiniciar.addEventListener('click', iniciarJuego);
@@ -37,6 +39,7 @@ niveles.addEventListener('click', manejarCambioNivel);
 document.addEventListener('keydown', manejarTeclado);
 
 renderNiveles();
+renderHistorial();
 
 if (!cargarPartida()) {
   iniciarJuego();
@@ -269,7 +272,79 @@ function revisarVictoria() {
   // BUG: innerHTML con el nombre del jugador permite inyectar HTML o scripts.
   // FIX: textContent muestra el nombre como texto seguro.
   mensaje.textContent = 'Ganaste, ' + state.nombre + '!';
+  guardarResultado();
   localStorage.removeItem(STORAGE_KEY);
+}
+
+function guardarResultado() {
+  const resultados = cargarHistorial();
+  const resultado = {
+    nombre: state.nombre,
+    nivel: state.nivel.nombre,
+    intentos: state.movimientos,
+    fecha: new Date().toLocaleString('es-CL')
+  };
+
+  resultados.unshift(resultado);
+  guardarHistorial(resultados);
+  renderHistorial(resultados);
+}
+
+function renderHistorial(resultados) {
+  const datos = Array.isArray(resultados) ? resultados : cargarHistorial();
+  const fragmento = document.createDocumentFragment();
+
+  datos.forEach(function (resultado) {
+    const item = document.createElement('li');
+    const nombre = document.createElement('strong');
+    const detalle = document.createElement('span');
+    const fecha = document.createElement('small');
+
+    item.className = 'history-item';
+    nombre.textContent = resultado.nombre;
+    detalle.textContent = 'Nivel ' + resultado.nivel + ' · ' + resultado.intentos + ' intentos';
+    fecha.textContent = resultado.fecha;
+
+    item.appendChild(nombre);
+    item.appendChild(detalle);
+    item.appendChild(fecha);
+    fragmento.appendChild(item);
+  });
+
+  if (datos.length === 0) {
+    const vacio = document.createElement('li');
+    vacio.className = 'history-empty';
+    vacio.textContent = 'Sin partidas ganadas';
+    fragmento.appendChild(vacio);
+  }
+
+  historial.replaceChildren(fragmento);
+}
+
+function cargarHistorial() {
+  const guardado = localStorage.getItem(HISTORY_KEY);
+
+  if (!guardado) {
+    return [];
+  }
+
+  try {
+    const resultados = JSON.parse(guardado);
+
+    if (!Array.isArray(resultados)) {
+      localStorage.removeItem(HISTORY_KEY);
+      return [];
+    }
+
+    return resultados.filter(esResultadoValido);
+  } catch (error) {
+    localStorage.removeItem(HISTORY_KEY);
+    return [];
+  }
+}
+
+function guardarHistorial(resultados) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(resultados));
 }
 
 function guardarPartida() {
@@ -329,4 +404,11 @@ function contarParesEncontrados(cartas) {
 
 function esCartaValida(carta) {
   return typeof carta.id === 'number' && typeof carta.src === 'string' && typeof carta.encontrada === 'boolean';
+}
+
+function esResultadoValido(resultado) {
+  return typeof resultado.nombre === 'string' &&
+    typeof resultado.nivel === 'string' &&
+    typeof resultado.intentos === 'number' &&
+    typeof resultado.fecha === 'string';
 }
