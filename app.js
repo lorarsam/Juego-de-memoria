@@ -1,15 +1,15 @@
 const NIVELES = [
-  { id: 1, nombre: 'Facil', icono: '◆', pares: 8 },
+  { id: 1, nombre: 'Fácil', icono: '◆', pares: 8 },
   { id: 2, nombre: 'Medio', icono: '▲', pares: 12 },
-  { id: 3, nombre: 'Dificil', icono: '★', pares: 16 }
+  { id: 3, nombre: 'Difícil', icono: '★', pares: 16 }
 ];
 const STORAGE_KEY = 'juego-memoria-partida';
 const HISTORY_KEY = 'juego-memoria-historial';
 const AUDIO_KEY = 'juego-memoria-audio-muteado';
 const AUDIO_SRC = 'cancion_juego.mp3';
 const ACTION_LABELS = {
-  start: 'Start',
-  reset: 'Reset'
+  start: 'Iniciar',
+  reset: 'Reiniciar'
 };
 const UI_ICONS = {
   play: 'iconos/play.svg',
@@ -59,10 +59,10 @@ renderNiveles();
 renderHistorial();
 
 if (!cargarPartida()) {
-  prepararTableroBloqueado('Escribe tu nombre y presiona Start', true);
+  prepararTableroBloqueado('Escribe tu nombre y presiona Iniciar', true);
 } else if (!state.iniciado) {
-  prepararTableroBloqueado('Escribe tu nombre y presiona Start', false);
-  mensaje.textContent = 'Escribe tu nombre y presiona Start';
+  prepararTableroBloqueado('Escribe tu nombre y presiona Iniciar', false);
+  mensaje.textContent = 'Escribe tu nombre y presiona Iniciar';
 }
 
 function manejarAccionPrincipal() {
@@ -236,7 +236,7 @@ function renderNiveles() {
 
 function manejarClickTablero(event) {
   if (!state.iniciado) {
-    mensaje.textContent = 'Presiona Start o Enter para iniciar';
+    mensaje.textContent = 'Presiona Iniciar o Enter para comenzar';
     return;
   }
 
@@ -282,7 +282,7 @@ function manejarCambioNivel(event) {
   if (state.iniciado) {
     iniciarJuego(false);
   } else {
-    prepararTableroBloqueado(inputNombre.value.trim() ? 'Presiona Start para iniciar' : 'Escribe tu nombre para iniciar', true);
+    prepararTableroBloqueado(inputNombre.value.trim() ? 'Presiona Iniciar para comenzar' : 'Escribe tu nombre para iniciar', true);
     guardarPartida();
   }
 }
@@ -327,7 +327,7 @@ function manejarCambioNombre() {
   state.nombre = nombre;
   detenerMusica();
   localStorage.removeItem(STORAGE_KEY);
-  prepararTableroBloqueado(nombre ? 'Presiona Start para iniciar' : 'Escribe tu nombre para iniciar', true);
+  prepararTableroBloqueado(nombre ? 'Presiona Iniciar para comenzar' : 'Escribe tu nombre para iniciar', true);
 }
 
 function voltearCarta(indice) {

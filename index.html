@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Juego de Memoria</title>
+  <title>Memento Paria</title>
+  <link rel="icon" type="image/svg+xml" href="iconos/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -12,13 +13,13 @@
 </head>
 <body>
   <header class="hud" aria-label="Estado del juego">
-    <p>Level <span id="nivel">1</span></p>
-    <p>Pairs: <span id="pares">0/8</span></p>
-    <p>Attempts: <span id="movimientos">0</span></p>
+    <p>Nivel <span id="nivel">1</span></p>
+    <p>Pares: <span id="pares">0/8</span></p>
+    <p>Intentos: <span id="movimientos">0</span></p>
   </header>
 
   <main class="game" aria-labelledby="titulo">
-    <h1 id="titulo" class="sr-only">Juego de Memoria</h1>
+    <h1 id="titulo" class="sr-only">Memento Paria</h1>
 
     <label class="name-box" for="nombre">
       <span class="sr-only">Nombre del jugador</span>
@@ -26,7 +27,7 @@
     </label>
 
     <section class="controls" aria-label="Controles del juego">
-      <button id="iniciar" type="button" class="btn btn-start">▶ Start</button>
+      <button id="iniciar" type="button" class="btn btn-start">Iniciar</button>
       <button id="audio-toggle" type="button" class="btn audio-btn" aria-label="Silenciar musica"></button>
     </section>
 
