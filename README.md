@@ -2,9 +2,7 @@
 
 Juego de memoria hecho con JavaScript vanilla para la evaluacion de DOM y eventos.
 
-Repositorio: https://github.com/lorarsam/Juego-de-memoria
-
-GitHub Pages: https://lorarsam.github.io/Juego-de-memoria/
+GitHub Pages: https://lorarsam.github.io/
 
 ## Defensa del proyecto
 
