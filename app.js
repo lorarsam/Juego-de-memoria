@@ -24,6 +24,7 @@ const musica = new Audio(AUDIO_SRC);
 musica.loop = true;
 musica.volume = 0.35;
 
+// El estado concentra toda la información de la partida; la interfaz se vuelve a dibujar desde aquí.
 const state = {
   cartas: [],
   volteadas: [],
@@ -54,7 +55,7 @@ botonIniciar.addEventListener('click', manejarAccionPrincipal);
 botonAudio.addEventListener('click', alternarAudio);
 botonHuevo.addEventListener('click', mostrarMensajeHuevo);
 inputNombre.addEventListener('input', manejarCambioNombre);
-// FIX: delegación de eventos; no se crea un listener por cada carta en cada render.
+// Un solo listener en el tablero detecta qué carta se presionó usando delegación de eventos.
 tablero.addEventListener('click', manejarClickTablero);
 niveles.addEventListener('click', manejarCambioNivel);
 document.addEventListener('keydown', manejarTeclado);
@@ -90,6 +91,7 @@ function iniciarJuego(reiniciarMusica) {
     return;
   }
 
+  // Al iniciar o reiniciar se crea un mazo nuevo y se limpian los datos del turno anterior.
   state.cartas = crearMazo();
   state.volteadas = [];
   state.movimientos = 0;
@@ -162,6 +164,7 @@ function barajar(mazo) {
 function render() {
   const fragmento = document.createDocumentFragment();
 
+  // render() traduce el estado actual en botones de cartas, contadores y controles visibles.
   tablero.dataset.nivel = String(state.nivel.id);
   tablero.classList.toggle('board-locked', !state.iniciado);
 
@@ -250,6 +253,7 @@ function manejarClickTablero(event) {
     return;
   }
 
+  // El click puede venir desde la imagen dentro del botón, por eso se busca la carta más cercana.
   const carta = event.target.closest('.card');
 
   if (!carta || !tablero.contains(carta)) {
@@ -347,14 +351,12 @@ function voltearCarta(indice) {
     return;
   }
 
-  // BUG: el código auditado permitía una tercera carta durante el setTimeout.
-  // FIX: el bloqueo vive en el estado y corta nuevos clicks hasta resolver el turno.
+  // El bloqueo evita jugar otra carta mientras se resuelve una pareja incorrecta.
   if (state.bloqueado || !carta || carta.encontrada) {
     return;
   }
 
-  // BUG: un doble click sobre la misma carta podía formar pareja consigo misma.
-  // FIX: si el índice ya está volteado, el click se ignora.
+  // Si la carta ya está volteada en este turno, se ignora para no comparar una carta consigo misma.
   if (state.volteadas.includes(indice)) {
     return;
   }
@@ -373,8 +375,7 @@ function resolverTurno() {
   const b = state.volteadas[1];
   state.movimientos++;
 
-  // BUG: antes se comparaba leyendo textContent del DOM.
-  // FIX: la comparación usa state.cartas, la fuente única de verdad.
+  // La comparación se hace con los datos del estado, no leyendo texto desde el DOM.
   if (state.cartas[a].id === state.cartas[b].id) {
     state.cartas[a].encontrada = true;
     state.cartas[b].encontrada = true;
@@ -386,6 +387,7 @@ function resolverTurno() {
     return;
   }
 
+  // Si no coinciden, se bloquea el tablero hasta que el timeout vuelva a ocultarlas.
   state.bloqueado = true;
   render();
   guardarPartida();
@@ -403,8 +405,7 @@ function revisarVictoria() {
     return;
   }
 
-  // BUG: innerHTML con el nombre del jugador permite inyectar HTML o scripts.
-  // FIX: textContent muestra el nombre como texto seguro.
+  // textContent muestra el nombre como texto seguro y evita interpretar HTML del usuario.
   mensaje.textContent = 'Ganaste, ' + state.nombre + '!';
   guardarResultado();
   localStorage.removeItem(STORAGE_KEY);
