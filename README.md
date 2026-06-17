@@ -18,4 +18,4 @@ Tambien se corrigio el bloqueo del turno. El codigo original permitia hacer clic
 
 Para seguridad, la version original mostraba el mensaje de victoria con `innerHTML`, mezclando texto del usuario con HTML. En la version final se usa `textContent`, por lo que el nombre del jugador se muestra como texto normal y no como codigo interpretable.
 
-Con mas tiempo mejoraria la accesibilidad del tablero con navegacion completa por teclado entre cartas, no solo Enter para iniciar y R para reiniciar.
+Con mas tiempo mejoraria la accesibilidad del tablero con navegacion completa por teclado entre cartas, no solo Enter para iniciar y R para reiniciar. Tambien agregaria un modo online o versus para competir contra otro jugador, y un modo con tiempo limite para aumentar la dificultad.
